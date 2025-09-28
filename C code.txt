@@ -1,0 +1,185 @@
+
+char ssid[] = "Microworld";//Enter your WIFI name
+char pass[] = "Microworld123";//Enter your WIFI password
+
+#define DHTPIN D5 //D5 pin of Node MCU  14
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+float h , t,rs;
+#define relay2 2
+int sensorValue;
+int value = 200;
+
+int val11;
+float val2;
+float per;
+
+// constants won't change. They're used here to set pin numbers:
+const int buttonPin = 13;     // the number of the pushbutton pin d7 13
+const int ledPin =  16;      // the number of the LED pin 13 D0 16
+// variables will change:
+int buttonState = 0;         // variable for reading the pushbutton status
+
+const int Voice_1 = 16;//D0 16
+const int Voice_2 = 12;//D6 12
+
+BLYNK_WRITE(V0) {
+  digitalWrite(D0, param.asInt());
+}
+void sendSensor()
+{
+ h = dht.readHumidity();
+ t = dht.readTemperature(); // or dht.readTemperature(true) for Fahrenheit
+ rs=sensorValue;//add
+
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+  Blynk.virtualWrite(V1, t);
+  Blynk.virtualWrite(V2, h);
+ 
+  
+}
+void setup() {
+ Serial.begin(9600);
+   pinMode(ledPin, OUTPUT);
+   pinMode(relay2, OUTPUT);
+    digitalWrite(relay2,HIGH);
+     pinMode(buttonPin, INPUT);
+    pinMode(Voice_1, OUTPUT); 
+    pinMode(Voice_2, OUTPUT);
+    digitalWrite(Voice_1, LOW);
+    digitalWrite(Voice_2, LOW);
+  Blynk.begin(auth, ssid, pass, "blynk.cloud", 80);
+  lcd.begin();
+  lcd.backlight();
+  welcome();
+}
+void welcome()
+{
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Conecting ...   "); // You can make spaces using well... spaces
+    lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+    lcd.print("Cloud Plz Wait..");
+    delay(3000);
+    lcd.backlight(); 
+    lcd.clear(); //Iot based air pollution monitoring system for smart city
+
+    lcd.setCursor(0,0);
+    lcd.print("  Welcome to    "); // You can make spaces using well... spaces
+    lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+    lcd.print("GGSP Nashik     ");//KKWAGH Polytechnic
+    delay(3000);
+    lcd.clear();
+
+
+    lcd.setCursor(0,0);
+    lcd.print("IOT based Smart "); // Cloud based weather monitering using iot
+    lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+    lcd.print("Voiceinteractive");
+    delay(3000);
+    lcd.clear();
+
+    lcd.setCursor(0,0);
+    lcd.print(" Talking Plant  "); // You can make spaces using well... spaces
+    lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+    lcd.print("                ");
+    delay(3000);
+    lcd.clear();
+    
+  
+}
+
+void loop() {
+  Blynk.run();
+   h = dht.readHumidity();
+  t = dht.readTemperature();
+  
+  Display_Value();
+  read_sensor_MQ135();
+}
+void read_sensor_MQ135()
+{
+sensorValue = analogRead(0);       // read analog input pin 0
+sensorValue = sensorValue + 1090;//calibration
+Serial.print("Moisture=");
+Serial.print(sensorValue, DEC);               // prints the value read
+Serial.println(" PPM");
+lcd.setCursor(0,2);
+lcd.setCursor(0,2);
+lcd.print("Moisture = ");
+lcd.setCursor(11,1);;
+lcd.print(sensorValue,DEC);
+rs=sensorValue;//add
+Blynk.virtualWrite(V3, sensorValue);
+delay(3000);                                   // wait 100ms for next reading 
+lcd.clear(); 
+if(sensorValue>1300  &&  sensorValue<1550)//1600
+{
+  digitalWrite(relay2,LOW);
+          
+ }
+ else
+ {
+  digitalWrite(relay2,HIGH);
+      
+ }
+if(sensorValue<1300)
+{
+ 
+      digitalWrite(Voice_1, HIGH);
+      lcd.setCursor(0 ,0);
+      lcd.print("Please Give Me  ");
+      lcd.setCursor( 0,1);
+      lcd.print("Water Voice 1   ");
+      delay(1000);
+      digitalWrite(Voice_1, LOW);
+      delay(5000);
+      lcd.clear();
+      
+ }
+ delay(500); 
+}
+void Display_Value()
+{
+  
+    lcd.clear(); 
+    lcd.setCursor(0, 0); 
+    lcd.print("Temp = "); // You can make spaces using well... spaces Temperature = humidity
+    lcd.setCursor(8, 0); 
+    value =t;
+    Serial.print(" ");
+    Serial.print(value);
+    lcd.print(value);
+    lcd.setCursor(13, 0); 
+    lcd.print(" C ");
+    lcd.setCursor(0, 1); // Or setting the cursor in the desired position.
+    lcd.print("Hum  = ");
+    lcd.setCursor(8, 1);
+    value =h;
+    Serial.print(" ");
+    Serial.print(value);
+    lcd.print(value);
+    lcd.setCursor(13, 1); 
+    lcd.print(" % ");
+    delay(2000);
+    lcd.clear(); 
+    Blynk.virtualWrite(V1, t);
+    Blynk.virtualWrite(V2, h);
+     if (t>=35)
+   {
+      digitalWrite(Voice_2, HIGH);
+      lcd.setCursor(0 ,0);
+      lcd.print("Please Give Me  ");
+      lcd.setCursor( 0,1);
+      lcd.print("Water Voice 2   ");
+      delay(1000);
+      digitalWrite(Voice_2, LOW);
+      delay(5000);
+      delay(5000);
+      lcd.clear();
+    
+    }
+}
